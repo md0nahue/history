@@ -88,7 +88,8 @@ class YouTubeService
       return results
     else
       Rails.logger.error "yt-dlp search failed: #{stderr}"
-      return []
+      return [] if stderr.blank?
+      raise "yt-dlp search failed: #{stderr}"
     end
   end
   
@@ -98,30 +99,20 @@ class YouTubeService
     
     # Create fuzzy matcher with the search results
     titles = search_results.map { |result| result[:title].downcase }
-    matcher = FuzzyMatch.new(titles)
+    matcher = FuzzyMatch.new(titles, must_match_at_least_one_word: true)
     
     # Find the best match
-    best_match_title = matcher.find(search_string)
+    best_match_title, similarity_score = matcher.find_with_score(search_string)
     
     if best_match_title
       # Find the corresponding result
       result = search_results.find { |r| r[:title].downcase == best_match_title }
       
       if result
-        # Calculate similarity score
-        similarity_score = matcher.find_with_score(search_string).last
-        
-        Rails.logger.info "Best match found: '#{result[:title]}' (score: #{similarity_score})"
-        
-        if similarity_score >= threshold
-          result[:similarity_score] = similarity_score
-          return result
-        else
-          Rails.logger.warn "Best match score (#{similarity_score}) below threshold (#{threshold})"
-        end
+        result[:similarity_score] = similarity_score
+        return result if similarity_score >= threshold
       end
     end
-    
     nil
   end
 end 

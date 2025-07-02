@@ -1,4 +1,5 @@
 require 'rails_helper'
+require_relative '../../app/services/youtube_service'
 
 RSpec.describe YouTubeService, type: :service do
   let(:service) { YouTubeService.new }
