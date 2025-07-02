@@ -61,3 +61,4 @@ This allows you to inspect the API responses and understand the data structure.
 
 The application uses the New York Times Archive API. For more information, visit:
 https://developer.nytimes.com/docs/archive-product/1/overview
+# history
