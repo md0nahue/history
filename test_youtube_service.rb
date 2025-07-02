@@ -24,7 +24,7 @@ test_cases.each_with_index do |test_case, index|
   puts "-" * 50
   
   begin
-    result = youtube_service.search_and_download_song(
+    result = youtube_service.search_and_find_song(
       test_case[:title],
       test_case[:artist],
       5,  # max_results
@@ -36,8 +36,11 @@ test_cases.each_with_index do |test_case, index|
       puts "   Title: #{result[:title]}"
       puts "   Artist: #{result[:artist]}"
       puts "   Duration: #{result[:duration]} seconds"
+      puts "   Video ID: #{result[:video_id]}"
+      puts "   Video URL: #{result[:video_url]}"
+      puts "   Embed URL: #{result[:embed_url]}"
+      puts "   Thumbnail: #{result[:thumbnail_url]}"
       puts "   Similarity Score: #{result[:similarity_score]}"
-      puts "   File Path: #{result[:file_path]}"
     else
       puts "❌ FAILED: #{result[:error]}"
     end
@@ -53,4 +56,4 @@ end
 
 puts "\n" + "=" * 50
 puts "Test completed!"
-puts "Check the storage/downloads directory for downloaded files." 
+puts "YouTube videos found and ready for embedding." 

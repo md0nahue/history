@@ -4,12 +4,10 @@ require 'fuzzy_match'
 
 class YouTubeService
   def initialize
-    @downloads_dir = Rails.root.join('storage', 'downloads')
-    FileUtils.mkdir_p(@downloads_dir) unless Dir.exist?(@downloads_dir)
-    Rails.logger.info "YouTube Service initialized with downloads directory: #{@downloads_dir}"
+    Rails.logger.info "YouTube Service initialized"
   end
   
-  def search_and_download_song(song_title, artist = nil, max_results = 5, similarity_threshold = 0.7)
+  def search_and_find_song(song_title, artist = nil, max_results = 5, similarity_threshold = 0.7)
     Rails.logger.info "Searching for song: #{song_title} by #{artist}"
     
     begin
@@ -29,23 +27,18 @@ class YouTubeService
         return { success: false, error: "No suitable match found for '#{song_title}'" }
       end
       
-      # Download the best match
-      download_result = download_video_as_mp3(best_match)
-      
-      if download_result[:success]
-        Rails.logger.info "Successfully downloaded: #{best_match[:title]}"
-        return {
-          success: true,
-          title: best_match[:title],
-          artist: best_match[:uploader],
-          duration: best_match[:duration],
-          file_path: download_result[:file_path],
-          similarity_score: best_match[:similarity_score]
-        }
-      else
-        Rails.logger.error "Failed to download video: #{download_result[:error]}"
-        return { success: false, error: download_result[:error] }
-      end
+      Rails.logger.info "Successfully found: #{best_match[:title]}"
+      return {
+        success: true,
+        title: best_match[:title],
+        artist: best_match[:uploader],
+        duration: best_match[:duration],
+        video_id: best_match[:id],
+        video_url: best_match[:url],
+        embed_url: "https://www.youtube.com/embed/#{best_match[:id]}",
+        thumbnail_url: "https://img.youtube.com/vi/#{best_match[:id]}/mqdefault.jpg",
+        similarity_score: best_match[:similarity_score]
+      }
       
     rescue => e
       Rails.logger.error "Exception in YouTubeService: #{e.message}"
@@ -130,53 +123,5 @@ class YouTubeService
     end
     
     nil
-  end
-  
-  def download_video_as_mp3(video_data)
-    # Create a safe filename
-    safe_title = video_data[:title].gsub(/[^\w\s-]/, '').gsub(/\s+/, '_')
-    filename = "#{safe_title}_#{video_data[:id]}.mp3"
-    file_path = @downloads_dir.join(filename)
-    
-    # Skip if file already exists
-    if File.exist?(file_path)
-      Rails.logger.info "File already exists: #{file_path}"
-      return { success: true, file_path: file_path.to_s }
-    end
-    
-    # Download command for MP3
-    command = [
-      'yt-dlp',
-      '--extract-audio',
-      '--audio-format', 'mp3',
-      '--audio-quality', '0',  # Best quality
-      '--output', file_path.to_s,
-      '--no-playlist',
-      video_data[:url]
-    ]
-    
-    Rails.logger.info "Executing download command: #{command.join(' ')}"
-    
-    stdout, stderr, status = Open3.capture3(*command)
-    
-    if status.success?
-      Rails.logger.info "Successfully downloaded: #{file_path}"
-      return { success: true, file_path: file_path.to_s }
-    else
-      Rails.logger.error "Download failed: #{stderr}"
-      return { success: false, error: stderr }
-    end
-  end
-  
-  def cleanup_old_downloads(max_age_days = 7)
-    cutoff_time = Time.current - max_age_days.days
-    
-    Dir.glob(@downloads_dir.join('*.mp3')).each do |file_path|
-      file_time = File.mtime(file_path)
-      if file_time < cutoff_time
-        File.delete(file_path)
-        Rails.logger.info "Deleted old file: #{file_path}"
-      end
-    end
   end
 end 

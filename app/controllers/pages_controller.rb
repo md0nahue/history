@@ -38,17 +38,27 @@ class PagesController < ApplicationController
     # Get source information for display
     @source_info = @news_service.get_source_info(@random_year)
     
-    # Fetch Billboard chart data for the year (only if year >= 1958 when Billboard Hot 100 started)
-    @billboard_service = BillboardService.new
-    if @random_year >= 1958
-      @billboard_chart = @billboard_service.fetch_year_end_chart(@random_year, 'hot-100')
-      
-      # If no Billboard data, try a different chart
-      if @billboard_chart.empty?
-        @billboard_chart = @billboard_service.fetch_year_end_chart(@random_year, 'pop-songs')
+    # Fetch popular songs for the date using the hybrid Historical Music Service
+    # This will try Billboard first (1958+) and fall back to Gemini if needed
+    @music_service = HistoricalMusicService.new
+    if @random_year >= 1950
+      begin
+        date_string = "#{@random_year}-#{@random_month.to_s.rjust(2, '0')}-#{@random_day.to_s.rjust(2, '0')}"
+        @popular_songs = @music_service.get_and_download_popular_songs(date_string, 5, 0.7)
+        
+        # If no songs found, try a different date in the same year
+        if !@popular_songs[:success] || @popular_songs[:successful_finds] == 0
+          @random_month = 6  # Try June
+          @random_day = 15   # Try the 15th
+          date_string = "#{@random_year}-#{@random_month.to_s.rjust(2, '0')}-#{@random_day.to_s.rjust(2, '0')}"
+          @popular_songs = @music_service.get_and_download_popular_songs(date_string, 5, 0.7)
+        end
+      rescue => e
+        Rails.logger.error "Error fetching popular songs: #{e.message}"
+        @popular_songs = { success: false, error: e.message }
       end
     else
-      @billboard_chart = []
+      @popular_songs = { success: false, error: "No music data available for years before 1950" }
     end
   end
   
