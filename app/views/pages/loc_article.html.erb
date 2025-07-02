@@ -1,0 +1,127 @@
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+  <div class="mb-6">
+    <a href="<%= root_path %>" class="text-blue-600 hover:text-blue-800 flex items-center">
+      <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"></path>
+      </svg>
+      Back to History
+    </a>
+  </div>
+
+  <% if @article_data %>
+    <div class="bg-white rounded-lg shadow-lg p-6">
+      <!-- Header -->
+      <div class="border-b border-gray-200 pb-4 mb-6">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">
+          <%= @article_data[:newspaper_name] %>
+        </h1>
+        <p class="text-lg text-gray-600 mb-4">
+          <%= Date.parse(@article_data[:date_issued]).strftime("%B %d, %Y") %> - Page <%= @article_data[:sequence] %>
+        </p>
+        
+        <!-- Action buttons -->
+        <div class="flex flex-wrap gap-4">
+          <a href="<%= @article_data[:pdf_url] %>" 
+             target="_blank" 
+             rel="noopener noreferrer"
+             class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"></path>
+            </svg>
+            View PDF
+          </a>
+          
+          <a href="<%= @article_data[:jp2_url] %>" 
+             target="_blank" 
+             rel="noopener noreferrer"
+             class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path>
+            </svg>
+            View Image
+          </a>
+          
+          <span class="inline-flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-lg">
+            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"></path>
+            </svg>
+            Library of Congress
+          </span>
+        </div>
+      </div>
+
+      <!-- OCR Text Content -->
+      <div class="prose prose-lg max-w-none">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-2xl font-semibold text-gray-900">OCR Text</h2>
+            <p class="text-sm text-gray-600 mt-1">Cleaned using Gemini 2.5 Flash-Lite for better readability</p>
+          </div>
+          <% if @article_data[:raw_ocr_text] %>
+            <button id="toggle-ocr" class="inline-flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
+              <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path>
+              </svg>
+              Show Original OCR
+            </button>
+          <% end %>
+        </div>
+        
+        <div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
+          <div id="cleaned-ocr" class="whitespace-pre-wrap font-serif text-gray-800 leading-relaxed">
+            <%= @article_data[:ocr_text] %>
+          </div>
+          
+          <% if @article_data[:raw_ocr_text] %>
+            <div id="original-ocr" class="whitespace-pre-wrap font-serif text-gray-800 leading-relaxed hidden">
+              <div class="bg-yellow-100 p-4 rounded-lg mb-4">
+                <p class="text-sm text-yellow-800 font-medium mb-2">Original OCR Text (before cleaning):</p>
+              </div>
+              <%= @article_data[:raw_ocr_text] %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+      
+      <script>
+        document.getElementById('toggle-ocr')?.addEventListener('click', function() {
+          const cleanedDiv = document.getElementById('cleaned-ocr');
+          const originalDiv = document.getElementById('original-ocr');
+          const button = this;
+          
+          if (cleanedDiv.classList.contains('hidden')) {
+            cleanedDiv.classList.remove('hidden');
+            originalDiv.classList.add('hidden');
+            button.innerHTML = '<svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path></svg>Show Original OCR';
+          } else {
+            cleanedDiv.classList.add('hidden');
+            originalDiv.classList.remove('hidden');
+            button.innerHTML = '<svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"></path></svg>Show Cleaned OCR';
+          }
+        });
+      </script>
+
+      <!-- Article ID for debugging -->
+      <div class="mt-6 pt-4 border-t border-gray-200">
+        <p class="text-sm text-gray-500">
+          Article ID: <%= @article_id %>
+        </p>
+      </div>
+    </div>
+  <% else %>
+    <div class="bg-white rounded-lg shadow-lg p-6 text-center">
+      <div class="text-gray-400 mb-4">
+        <svg class="w-16 h-16 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path>
+        </svg>
+      </div>
+      <h2 class="text-xl font-semibold text-gray-900 mb-2">Article Not Found</h2>
+      <p class="text-gray-600 mb-4">
+        The requested article could not be loaded from the Library of Congress.
+      </p>
+      <a href="<%= root_path %>" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+        Return to History
+      </a>
+    </div>
+  <% end %>
+</div> 

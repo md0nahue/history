@@ -1,0 +1,170 @@
+<div class="container mx-auto px-4 py-8">
+  <header class="text-center mb-12">
+    <h1 class="text-6xl font-bold text-gray-800 mb-4">
+      <%= @random_year %>
+    </h1>
+    <p class="text-xl text-gray-600">
+      Historical News & Billboard Charts from <%= Date.new(@random_year, @random_month, @random_day).strftime("%B %d, %Y") %>
+    </p>
+    <% if @source_info %>
+      <p class="text-sm text-gray-500 mt-2">
+        Source: <%= @source_info[:name] %> - <%= @source_info[:description] %>
+      </p>
+    <% end %>
+  </header>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
+    <!-- News Articles Section -->
+    <div class="space-y-6">
+      <h2 class="text-3xl font-bold text-gray-800 mb-6 flex items-center">
+        <svg class="w-8 h-8 mr-3 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"></path>
+        </svg>
+        Historical News Articles
+      </h2>
+      
+      <% if @articles.any? %>
+        <div class="space-y-4">
+          <% @articles.each do |article| %>
+            <article class="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow duration-200">
+              <h3 class="text-lg font-semibold text-gray-900 mb-3">
+                <a href="<%= article[:url] %>" 
+                   <% if article[:source] == 'Library of Congress' %>
+                     class="text-blue-600 hover:text-blue-800 hover:underline"
+                   <% else %>
+                     target="_blank" 
+                     rel="noopener noreferrer"
+                     class="text-blue-600 hover:text-blue-800 hover:underline"
+                   <% end %>>
+                  <%= article[:title] %>
+                </a>
+              </h3>
+              
+              <% if article[:abstract].present? %>
+                <p class="text-gray-700 mb-3 leading-relaxed text-sm">
+                  <%= article[:abstract] %>
+                </p>
+              <% end %>
+              
+              <div class="flex flex-wrap gap-2 text-xs text-gray-500">
+                <% if article[:byline].present? %>
+                  <span class="flex items-center">
+                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+                    </svg>
+                    <%= article[:byline] %>
+                  </span>
+                <% end %>
+                
+                <% if article[:section].present? %>
+                  <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                    <%= article[:section] %>
+                  </span>
+                <% end %>
+                
+                <% if article[:source].present? %>
+                  <% source_color = case article[:source]
+                     when 'Trove' then 'bg-green-100 text-green-800'
+                     when 'Library of Congress' then 'bg-blue-100 text-blue-800'
+                     when 'Guardian' then 'bg-orange-100 text-orange-800'
+                     else 'bg-gray-100 text-gray-800'
+                     end %>
+                  <span class="<%= source_color %> px-2 py-1 rounded-full text-xs font-medium">
+                    <%= article[:source] %>
+                  </span>
+                <% end %>
+                
+                <% if article[:newspaper].present? %>
+                  <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">
+                    <%= article[:newspaper] %>
+                    <% if article[:city].present? && article[:state].present? %>
+                      (<%= article[:city] %>, <%= article[:state] %>)
+                    <% end %>
+                  </span>
+                <% end %>
+              </div>
+            </article>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="text-center py-8 bg-white rounded-lg shadow-md">
+          <div class="text-gray-400 mb-4">
+            <svg class="w-12 h-12 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path>
+            </svg>
+          </div>
+          <h3 class="text-lg font-medium text-gray-900 mb-2">No Articles Found</h3>
+          <p class="text-gray-600 text-sm">
+            No articles were found for this date.
+          </p>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Billboard Charts Section -->
+    <div class="space-y-6">
+      <h2 class="text-3xl font-bold text-gray-800 mb-6 flex items-center">
+        <svg class="w-8 h-8 mr-3 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.369 4.369 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z"></path>
+        </svg>
+        Billboard Charts
+      </h2>
+      
+      <% if @billboard_chart.any? %>
+        <div class="space-y-3">
+          <% @billboard_chart.first(20).each do |song| %>
+            <div class="bg-white rounded-lg shadow-md p-4 border border-gray-200 hover:shadow-lg transition-shadow duration-200">
+              <div class="flex items-center space-x-4">
+                <div class="flex-shrink-0">
+                  <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <span class="text-purple-600 font-bold text-lg"><%= song[:rank] %></span>
+                  </div>
+                </div>
+                
+                <div class="flex-1 min-w-0">
+                  <h3 class="text-lg font-semibold text-gray-900 truncate">
+                    <%= song[:title] %>
+                  </h3>
+                  <p class="text-sm text-gray-600 truncate">
+                    <%= song[:artist] %>
+                  </p>
+                </div>
+                
+                <% if song[:image].present? %>
+                  <div class="flex-shrink-0">
+                    <img src="<%= song[:image] %>" 
+                         alt="<%= song[:title] %>" 
+                         class="w-12 h-12 rounded-lg object-cover"
+                         onerror="this.style.display='none'">
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+        
+        <div class="mt-4 text-center">
+          <p class="text-sm text-gray-500">
+            <% if @random_year >= 1958 %>
+              Showing top 20 songs from the <%= @random_year %> Billboard Hot 100
+            <% else %>
+              Billboard Hot 100 started in 1958 - no chart data available for <%= @random_year %>
+            <% end %>
+          </p>
+        </div>
+      <% else %>
+        <div class="text-center py-8 bg-white rounded-lg shadow-md">
+          <div class="text-gray-400 mb-4">
+            <svg class="w-12 h-12 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.369 4.369 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z"></path>
+            </svg>
+          </div>
+          <h3 class="text-lg font-medium text-gray-900 mb-2">No Chart Data Found</h3>
+          <p class="text-gray-600 text-sm">
+            No Billboard chart data was found for <%= @random_year %>.
+          </p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div> 
